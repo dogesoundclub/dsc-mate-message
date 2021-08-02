@@ -35,10 +35,25 @@ describe("DSCMateMessage", () => {
     })
 
     context("new DSCMateMessage", async () => {
-        it("set name", async () => {
+        it("set message", async () => {
             await mate.mint(admin.address, 0);
-            await mateMessage.set(0, "도지사운드클럽");
-            expect(await mateMessage.messages(0)).to.be.equal("도지사운드클럽");
+            await expect(mateMessage.set(0, "도지사운드클럽"))
+                .to.emit(mateMessage, "Set")
+                .withArgs(0, admin.address, "도지사운드클럽")
+            expect((await mateMessage.record(0, (await mateMessage.recordCount(0)).sub(1)))[1]).to.be.equal("도지사운드클럽");
+        })
+
+        it("set message twice", async () => {
+            await mate.mint(admin.address, 0);
+            await expect(mateMessage.set(0, "도지사운드클럽"))
+                .to.emit(mateMessage, "Set")
+                .withArgs(0, admin.address, "도지사운드클럽")
+            await mateMessage.setChangeInterval(1);
+            expect((await mateMessage.record(0, (await mateMessage.recordCount(0)).sub(1)))[1]).to.be.equal("도지사운드클럽");
+            await expect(mateMessage.set(0, "왈왈"))
+                .to.emit(mateMessage, "Set")
+                .withArgs(0, admin.address, "왈왈")
+            expect((await mateMessage.record(0, (await mateMessage.recordCount(0)).sub(1)))[1]).to.be.equal("왈왈");
         })
     })
 })
