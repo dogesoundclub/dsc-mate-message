@@ -316,6 +316,7 @@ interface IDSCMateMessage {
     event Set(uint256 indexed mateId, address indexed owner, string name, string message);
 
     function changeInterval() view external returns (uint256);
+    function remainBlocks(uint256 mateId) view external returns (uint256);
     function set(uint256 mateId, string calldata message) external;
     function recordCount(uint256 mateId) view external returns (uint256);
     function record(uint256 mateId, uint256 index) view external returns (address owner, string memory name, string memory message, uint256 blockNumber);
@@ -325,6 +326,7 @@ interface IDSCMateName {
     
     event Set(uint256 indexed mateId, address indexed owner, string name);
     
+    function tokenAmountForChanging() view external returns (uint256);
     function set(uint256 mateId, string calldata name) external;
     function recordCount(uint256 mateId) view external returns (uint256);
     function record(uint256 mateId, uint256 index) view external returns (address owner, string memory name, uint256 blockNumber);
@@ -358,12 +360,26 @@ contract DSCMateMessage is Ownable, IDSCMateMessage {
         changeInterval = interval;
     }
 
+    function remainBlocks(uint256 mateId) view external returns (uint256) {
+        Record[] memory rs = records[mateId];
+        if (rs.length == 0) {
+            return 0;
+        } else {
+            uint256 blocks = block.number.sub(rs[rs.length.sub(1)].blockNumber);
+            if (blocks >= changeInterval) {
+                return 0;
+            } else {
+                return changeInterval.sub(blocks);
+            }
+        }
+    }
+
     function set(uint256 mateId, string calldata message) external {
         require(mate.ownerOf(mateId) == msg.sender);
         Record[] storage rs = records[mateId];
         require(
             rs.length == 0 ||
-            block.number - rs[rs.length - 1].blockNumber >= changeInterval
+            block.number.sub(rs[rs.length.sub(1)].blockNumber) >= changeInterval
         );
 
         uint256 nameCount = mateName.recordCount(mateId);
@@ -371,7 +387,7 @@ contract DSCMateMessage is Ownable, IDSCMateMessage {
         if (nameCount == 0) {
             name = "";
         } else {
-            (, name,) = mateName.record(mateId, nameCount - 1);
+            (, name,) = mateName.record(mateId, nameCount.sub(1));
         }
         
         rs.push(Record({
