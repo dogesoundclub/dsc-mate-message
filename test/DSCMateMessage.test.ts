@@ -49,6 +49,7 @@ describe("DSCMateMessage", () => {
                 .to.emit(mateMessage, "Set")
                 .withArgs(0, admin.address, "", "도지사운드클럽")
             expect((await mateMessage.record(0, (await mateMessage.recordCount(0)).sub(1)))[2]).to.be.equal("도지사운드클럽");
+            expect(await mateMessage.lastMessage(0)).to.be.equal("도지사운드클럽");
         })
 
         it("set message twice", async () => {

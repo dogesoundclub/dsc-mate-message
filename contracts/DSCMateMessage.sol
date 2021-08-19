@@ -81,4 +81,13 @@ contract DSCMateMessage is Ownable, IDSCMateMessage {
         Record memory r = records[mateId][index];
         return (r.owner, r.name, r.message, r.blockNumber);
     }
+
+    function lastMessage(uint256 mateId) view external returns (string memory message) {
+        uint256 length = records[mateId].length;
+        if (length == 0) {
+            return "";
+        }
+        Record memory r = records[mateId][length.sub(1)];
+        return r.message;
+    }
 }

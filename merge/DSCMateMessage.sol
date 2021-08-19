@@ -320,6 +320,7 @@ interface IDSCMateMessage {
     function set(uint256 mateId, string calldata message) external;
     function recordCount(uint256 mateId) view external returns (uint256);
     function record(uint256 mateId, uint256 index) view external returns (address owner, string memory name, string memory message, uint256 blockNumber);
+    function lastMessage(uint256 mateId) view external returns (string memory message);
 }
 
 interface IDSCMateName {
@@ -327,9 +328,11 @@ interface IDSCMateName {
     event Set(uint256 indexed mateId, address indexed owner, string name);
     
     function tokenAmountForChanging() view external returns (uint256);
+    function exists(string calldata name) view external returns (bool);
     function set(uint256 mateId, string calldata name) external;
     function recordCount(uint256 mateId) view external returns (uint256);
     function record(uint256 mateId, uint256 index) view external returns (address owner, string memory name, uint256 blockNumber);
+    function getName(uint256 mateId) view external returns (string memory name);
 }
 
 contract DSCMateMessage is Ownable, IDSCMateMessage {
@@ -406,5 +409,14 @@ contract DSCMateMessage is Ownable, IDSCMateMessage {
     function record(uint256 mateId, uint256 index) view external returns (address owner, string memory name, string memory message, uint256 blockNumber) {
         Record memory r = records[mateId][index];
         return (r.owner, r.name, r.message, r.blockNumber);
+    }
+
+    function lastMessage(uint256 mateId) view external returns (string memory message) {
+        uint256 length = records[mateId].length;
+        if (length == 0) {
+            return "";
+        }
+        Record memory r = records[mateId][length.sub(1)];
+        return r.message;
     }
 }
